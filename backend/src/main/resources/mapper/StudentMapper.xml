@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.leave.mapper.StudentMapper">
+
+    <select id="selectStudentPage" resultType="com.leave.vo.StudentRowVO">
+        SELECT st.id, st.student_no AS studentNo, st.name, st.gender, st.phone, st.email,
+               st.class_id AS classId, cl.class_name AS className, c.college_name AS collegeName,
+               st.enroll_year AS enrollYear, u.username, u.status, st.create_time AS createTime
+        FROM t_student st
+        JOIN t_class cl ON cl.id = st.class_id
+        LEFT JOIN t_college c ON c.id = cl.college_id
+        LEFT JOIN t_user u ON u.ref_id = st.id AND u.user_type = 'STUDENT'
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (st.name LIKE CONCAT('%', #{keyword}, '%')
+                     OR st.student_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="classId != null">
+                AND st.class_id = #{classId}
+            </if>
+        </where>
+        ORDER BY st.id
+    </select>
+</mapper>

@@ -1,0 +1,79 @@
+Schwarzschild null-geodesic verification  (units: r_s = 1, M = 0.5)
+critical impact parameter b_c = 3*sqrt(3)*M = 2.598076 r_s
+
+[1] deflection angle  Binet integrator vs post-Newtonian series
+      b = 1000 r_s   exact quadrature = 2.002950588e-3 rad
+                        Binet ODE        = 2.002950591e-3 rad   rel.diff 1.41e-9
+                        4th-order series = 2.002950587e-3 rad   rel.diff 4.29e-10
+  PASS  Binet ODE = exact quadrature, b=1000
+  PASS  PN series converges to exact quadrature, b=1000
+      b =  100 r_s   exact quadrature = 2.029996623e-2 rad
+                        Binet ODE        = 2.029996624e-2 rad   rel.diff 5.69e-10
+                        4th-order series = 2.029996395e-2 rad   rel.diff 1.12e-7
+  PASS  Binet ODE = exact quadrature, b=100
+  PASS  PN series converges to exact quadrature, b=100
+      b =   20 r_s   exact quadrature = 1.081040765e-1 rad
+                        Binet ODE        = 1.081040765e-1 rad   rel.diff 9.86e-12
+                        4th-order series = 1.080962150e-1 rad   rel.diff 7.27e-5
+  PASS  Binet ODE = exact quadrature, b=20
+  PASS  PN series converges to exact quadrature, b=20
+      b =   10 r_s   exact quadrature = 2.361359954e-1 rad
+                        Binet ODE        = 2.361359954e-1 rad   rel.diff 1.98e-12
+                        4th-order series = 2.358488131e-1 rad   rel.diff 1.22e-3
+  PASS  Binet ODE = exact quadrature, b=10
+  PASS  PN series converges to exact quadrature, b=10
+      b*alpha at b = 1000 r_s : 2.002950588
+        4M + 15pi M^2/(4b)         = 2.002945243
+        4M + 15pi M^2/(4b) + ...   = 2.002950576
+  PASS  b*alpha -> 4M + 15pi M^2/(4b) + ...   residual 1.15e-8
+
+[1b] deflection integrator convergence (step size independence)
+  PASS  step-size convergence   rel.diff = 9.12e-12
+
+[2] Cartesian GPU ODE vs exact quadrature (camera at 1e6 r_s, escape at 1e9 r_s)
+      b =  30 r_s   GPU-ODE (fine steps) = 0.070151772 rad   exact = 0.070150808 rad   diff = 9.64e-7 rad (rel 1.4e-5)
+  PASS  Cartesian ODE (shader step control) b=30
+      b =  12 r_s   GPU-ODE (fine steps) = 0.190832948 rad   exact = 0.190829019 rad   diff = 3.93e-6 rad (rel 2.1e-5)
+  PASS  Cartesian ODE (shader step control) b=12
+      b =   6 r_s   GPU-ODE (fine steps) = 0.452620917 rad   exact = 0.452605413 rad   diff = 1.55e-5 rad (rel 3.4e-5)
+  PASS  Cartesian ODE (shader step control) b=6
+      b =   4 r_s   GPU-ODE (fine steps) = 0.858775913 rad   exact = 0.858730018 rad   diff = 4.59e-5 rad (rel 5.3e-5)
+  PASS  Cartesian ODE (shader step control) b=4
+      RK4 convergence at b = 6 r_s :  errors 1.55e-5 -> 9.29e-7 -> 5.73e-8   ratios 16.7, 16.2
+  PASS  4th-order convergence of the GPU integrator
+
+[3] critical impact parameter (capture threshold)
+      bisection gives b_c = 2.598076211 r_s   closed form = 2.598076211 r_s
+  PASS  b_c = 3*sqrt(3)*M
+      photon sphere r_ph = 1.5 r_s = 1.5 ; b at photon sphere = 2.598076211 r_s
+  PASS  photon sphere impact parameter
+
+[4] shadow angular radius for a static observer (r = 18 r_s)
+      ray traced  psi_c = 8.0637 deg   (b = 2.598124 r_s)
+      analytic    alpha = 8.0635 deg   (b_c = 2.598076 r_s)
+  PASS  shadow radius matches closed form
+      => shadow diameter = 16.127 deg
+
+[5] innermost stable circular orbit and Keplerian frequency
+      ISCO r = 6M = 3 r_s   Omega(ISCO) = 0.136083 (geometric)
+  PASS  ISCO = 6M
+      numerically minimised L(r) -> r = 3.000000 r_s
+  PASS  ISCO from minimum of L(r)
+      period at ISCO  T = 2*pi/Omega = 46.172 (r_s/c units)
+
+[6] frequency shift factors for the accretion disk
+      static emitter at 10 r_s seen from 18 r_s : g = 0.976187
+  PASS  static redshift
+      radial ray L = 0.00e+0, g(L=0) = 0.948683 = sqrt(1-3M/r)/sqrt(f_obs) = 0.948683
+  PASS  Keplerian shift reduces to gravitational redshift when L=0
+  PASS  static emitter redshift   g = 0.976187
+      b = 5 r_s :  prograde g = 1.0681 (I x1.30)   retrograde g = 0.8533 (I x0.53)
+  PASS  Doppler/beaming asymmetry present   ratio = 1.252
+
+[7] high-order images: a ray can cross the equatorial plane several times
+      b = b_c - 0.005 : captured = true, steps = 155
+      b = b_c + 0.005 : captured = false, turning = 336.2 deg, steps = 167
+  PASS  ray just inside b_c is captured
+  PASS  ray just outside b_c winds around the hole (>180 deg)
+
+ALL CHECKS PASSED

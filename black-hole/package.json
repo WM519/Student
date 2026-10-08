@@ -1,0 +1,27 @@
+{
+  "name": "schwarzschild-black-hole",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Real-time general-relativistic ray tracer for a Schwarzschild black hole (null geodesic integration on the GPU) built with Three.js + OrbitControls.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "verify": "node tools/verify-physics.mjs",
+    "smoke": "node tools/smoke-test.mjs",
+    "shadow": "node tools/measure-shadow.mjs",
+    "disk": "node tools/measure-disk.mjs",
+    "lut": "node tools/gen-blackbody-lut.mjs",
+    "check": "node tools/check-syntax.mjs",
+    "offline": "node tools/make-offline.mjs",
+    "shot": "node tools/render-shot.mjs"
+  },
+  "dependencies": {
+    "three": "0.169.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1",
+    "vite": "^5.4.11"
+  }
+}

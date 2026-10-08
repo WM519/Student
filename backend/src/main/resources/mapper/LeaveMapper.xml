@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.leave.mapper.LeaveMapper">
+
+    <sql id="leaveBaseColumns">
+        l.id, l.leave_no AS leaveNo, l.student_id AS studentId,
+        s.student_no AS studentNo, s.name AS studentName,
+        cl.class_name AS className, cg.college_name AS collegeName,
+        l.leave_type AS leaveType, l.start_date AS startDate, l.end_date AS endDate,
+        l.days, l.reason, l.status, l.current_level AS currentLevel,
+        l.apply_time AS applyTime, l.actual_return_time AS actualReturnTime
+    </sql>
+
+    <select id="selectMyLeaves" resultType="com.leave.vo.LeaveRowVO">
+        SELECT
+        <include refid="leaveBaseColumns"/>
+        FROM t_leave l
+        JOIN t_student s ON s.id = l.student_id
+        JOIN t_class cl ON cl.id = s.class_id
+        JOIN t_college cg ON cg.id = cl.college_id
+        <where>
+            l.student_id = #{studentId}
+            <if test="status != null and status != ''">
+                AND l.status = #{status}
+            </if>
+        </where>
+        ORDER BY l.id DESC
+    </select>
+
+    <select id="selectAllLeaves" resultType="com.leave.vo.LeaveRowVO">
+        SELECT
+        <include refid="leaveBaseColumns"/>
+        FROM t_leave l
+        JOIN t_student s ON s.id = l.student_id
+        JOIN t_class cl ON cl.id = s.class_id
+        JOIN t_college cg ON cg.id = cl.college_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (s.name LIKE CONCAT('%', #{keyword}, '%')
+                     OR s.student_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR l.leave_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null and status != ''">
+                AND l.status = #{status}
+            </if>
+            <if test="collegeId != null">
+                AND cg.id = #{collegeId}
+            </if>
+            <if test="leaveType != null and leaveType != ''">
+                AND l.leave_type = #{leaveType}
+            </if>
+        </where>
+        ORDER BY l.id DESC
+    </select>
+
+    <select id="selectApprovalLeaves" resultType="com.leave.vo.LeaveRowVO">
+        SELECT
+        <include refid="leaveBaseColumns"/>
+        FROM t_leave l
+        JOIN t_student s ON s.id = l.student_id
+        JOIN t_class cl ON cl.id = s.class_id
+        JOIN t_college cg ON cg.id = cl.college_id
+        <where>
+            <choose>
+                <when test="done != null and done">
+                    EXISTS (SELECT 1 FROM t_leave_audit la
+                            WHERE la.leave_id = l.id
+                              AND la.operator_user_id = #{userId}
+                              AND la.action IN ('APPROVE', 'REJECT'))
+                    <if test="keyword != null and keyword != ''">
+                        AND (s.name LIKE CONCAT('%', #{keyword}, '%')
+                             OR l.leave_no LIKE CONCAT('%', #{keyword}, '%'))
+                    </if>
+                </when>
+                <otherwise>
+                    <choose>
+                        <when test="level == 1">
+                            l.status = 'PENDING_HEAD' AND cl.head_teacher_id = #{teacherId}
+                        </when>
+                        <when test="level == 2">
+                            l.status = 'PENDING_COUNSELOR' AND cl.counselor_teacher_id = #{teacherId}
+                        </when>
+                        <when test="level == 3">
+                            l.status = 'PENDING_LEADER' AND cg.leader_teacher_id = #{teacherId}
+                        </when>
+                    </choose>
+                    <if test="keyword != null and keyword != ''">
+                        AND (s.name LIKE CONCAT('%', #{keyword}, '%')
+                             OR l.leave_no LIKE CONCAT('%', #{keyword}, '%'))
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        ORDER BY l.id DESC
+    </select>
+
+    <select id="selectLeaveRowById" resultType="com.leave.vo.LeaveRowVO">
+        SELECT
+        <include refid="leaveBaseColumns"/>
+        FROM t_leave l
+        JOIN t_student s ON s.id = l.student_id
+        JOIN t_class cl ON cl.id = s.class_id
+        JOIN t_college cg ON cg.id = cl.college_id
+        WHERE l.id = #{leaveId}
+    </select>
+
+    <select id="countPendingByTeacher" resultType="long">
+        SELECT
+          (SELECT COUNT(*) FROM t_leave l1
+             JOIN t_student s1 ON s1.id = l1.student_id
+             JOIN t_class c1 ON c1.id = s1.class_id
+           WHERE l1.status = 'PENDING_HEAD' AND c1.head_teacher_id = #{teacherId})
+        + (SELECT COUNT(*) FROM t_leave l2
+             JOIN t_student s2 ON s2.id = l2.student_id
+             JOIN t_class c2 ON c2.id = s2.class_id
+           WHERE l2.status = 'PENDING_COUNSELOR' AND c2.counselor_teacher_id = #{teacherId})
+        + (SELECT COUNT(*) FROM t_leave l3
+             JOIN t_student s3 ON s3.id = l3.student_id
+             JOIN t_class c3 ON c3.id = s3.class_id
+             JOIN t_college cg3 ON cg3.id = c3.college_id
+           WHERE l3.status = 'PENDING_LEADER' AND cg3.leader_teacher_id = #{teacherId})
+    </select>
+
+    <select id="countPendingAtLevel" resultType="long">
+        SELECT
+        <choose>
+            <when test="level == 1">
+                (SELECT COUNT(*) FROM t_leave l1
+                   JOIN t_student s1 ON s1.id = l1.student_id
+                   JOIN t_class c1 ON c1.id = s1.class_id
+                 WHERE l1.status = 'PENDING_HEAD' AND c1.head_teacher_id = #{teacherId})
+            </when>
+            <when test="level == 2">
+                (SELECT COUNT(*) FROM t_leave l2
+                   JOIN t_student s2 ON s2.id = l2.student_id
+                   JOIN t_class c2 ON c2.id = s2.class_id
+                 WHERE l2.status = 'PENDING_COUNSELOR' AND c2.counselor_teacher_id = #{teacherId})
+            </when>
+            <otherwise>
+                (SELECT COUNT(*) FROM t_leave l3
+                   JOIN t_student s3 ON s3.id = l3.student_id
+                   JOIN t_class c3 ON c3.id = s3.class_id
+                   JOIN t_college cg3 ON cg3.id = c3.college_id
+                 WHERE l3.status = 'PENDING_LEADER' AND cg3.leader_teacher_id = #{teacherId})
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countGroupByStatus" resultType="com.leave.vo.NameValueVO">
+        SELECT l.status AS name, COUNT(*) AS value
+        FROM t_leave l
+        <where>
+            <if test="studentId != null">
+                l.student_id = #{studentId}
+            </if>
+        </where>
+        GROUP BY l.status
+    </select>
+
+    <select id="countGroupByType" resultType="com.leave.vo.NameValueVO">
+        SELECT l.leave_type AS name, COUNT(*) AS value
+        FROM t_leave l
+        <where>
+            <if test="studentId != null">
+                l.student_id = #{studentId}
+            </if>
+        </where>
+        GROUP BY l.leave_type
+    </select>
+
+    <select id="countGroupByCollege" resultType="com.leave.vo.NameValueVO">
+        SELECT cg.college_name AS name, COUNT(*) AS value
+        FROM t_leave l
+        JOIN t_student s ON s.id = l.student_id
+        JOIN t_class cl ON cl.id = s.class_id
+        JOIN t_college cg ON cg.id = cl.college_id
+        GROUP BY cg.id, cg.college_name
+    </select>
+</mapper>

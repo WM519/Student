@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.leave.mapper.ClassMapper">
+
+    <select id="selectClassPage" resultType="com.leave.vo.ClassRowVO">
+        SELECT cl.id, cl.class_name AS className, cl.class_code AS classCode,
+               cl.college_id AS collegeId, c.college_name AS collegeName,
+               cl.head_teacher_id AS headTeacherId, ht.name AS headTeacherName,
+               cl.counselor_teacher_id AS counselorTeacherId, ct.name AS counselorTeacherName,
+               cl.create_time AS createTime
+        FROM t_class cl
+        JOIN t_college c ON c.id = cl.college_id
+        LEFT JOIN t_teacher ht ON ht.id = cl.head_teacher_id
+        LEFT JOIN t_teacher ct ON ct.id = cl.counselor_teacher_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (cl.class_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR cl.class_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="collegeId != null">
+                AND cl.college_id = #{collegeId}
+            </if>
+        </where>
+        ORDER BY cl.id
+    </select>
+</mapper>

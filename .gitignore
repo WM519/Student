@@ -1,0 +1,40 @@
+# ===================== Java / Maven =====================
+backend/target/
+*.class
+*.jar
+*.war
+
+# ===================== Node =====================
+node_modules/
+dist/
+.vite/
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===================== 测试/压测产物 =====================
+*.jtl
+*.out
+logs/
+
+# ===================== IDE =====================
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# ===================== 操作系统 =====================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===================== 本地私有配置（含密码，勿提交）=====================
+backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-local.properties
+.env
+.env.local
+
+# ===================== 不入库的课程报告（本地保留）=====================
+docs/软测实验报告/

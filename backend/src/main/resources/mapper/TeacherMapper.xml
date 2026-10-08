@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.leave.mapper.TeacherMapper">
+
+    <select id="selectTeacherPage" resultType="com.leave.vo.TeacherRowVO">
+        SELECT t.id, t.teacher_no AS teacherNo, t.name, t.gender, t.phone, t.email,
+               t.college_id AS collegeId, c.college_name AS collegeName,
+               u.username, u.status, t.create_time AS createTime
+        FROM t_teacher t
+        LEFT JOIN t_college c ON c.id = t.college_id
+        LEFT JOIN t_user u ON u.ref_id = t.id AND u.user_type = 'TEACHER'
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (t.name LIKE CONCAT('%', #{keyword}, '%')
+                     OR t.teacher_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="collegeId != null">
+                AND t.college_id = #{collegeId}
+            </if>
+        </where>
+        ORDER BY t.id
+    </select>
+
+    <select id="selectTeacherOptions" resultType="com.leave.vo.TeacherOptionVO">
+        SELECT t.id, t.name, t.teacher_no AS teacherNo, t.college_id AS collegeId
+        FROM t_teacher t
+        LEFT JOIN t_user u ON u.ref_id = t.id AND u.user_type = 'TEACHER'
+        LEFT JOIN t_user_role ur ON ur.user_id = u.id
+        LEFT JOIN t_role r ON r.id = ur.role_id
+        <where>
+            u.status = 1
+            <if test="roleCode != null and roleCode != ''">
+                AND r.role_code = #{roleCode}
+            </if>
+            <if test="collegeId != null">
+                AND t.college_id = #{collegeId}
+            </if>
+        </where>
+        GROUP BY t.id, t.name, t.teacher_no, t.college_id
+        ORDER BY t.id
+    </select>
+
+    <select id="selectTeacherRoles" resultType="com.leave.vo.TeacherRoleVO">
+        SELECT t.id AS teacherId, r.id AS roleId, r.role_code AS roleCode, r.role_name AS roleName
+        FROM t_teacher t
+        JOIN t_user u ON u.ref_id = t.id AND u.user_type = 'TEACHER'
+        JOIN t_user_role ur ON ur.user_id = u.id
+        JOIN t_role r ON r.id = ur.role_id
+        <where>
+            <if test="teacherIds != null and teacherIds.size() > 0">
+                t.id IN
+                <foreach collection="teacherIds" item="tid" open="(" separator="," close=")">
+                    #{tid}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY t.id
+    </select>
+</mapper>

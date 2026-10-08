@@ -1,0 +1,24 @@
+# 性能测试专用配置（仅 --spring.profiles.active=perf 时生效）
+# 目的：在单机受控环境下收窄 Tomcat 线程池与连接池，使“性能拐点”与“系统雪崩”
+# 能在可观测的并发区间内稳定复现；默认 profile 不做任何修改，保持原有容量。
+server:
+  tomcat:
+    # 工作线程上限：20（默认 200），被占满后新请求进入 accept-count 队列
+    threads:
+      max: 20
+      min-spare: 5
+    # 等待队列长度：10，超出后连接被拒绝
+    accept-count: 10
+    max-connections: 100
+
+spring:
+  datasource:
+    hikari:
+      # 连接池收窄：5，用于观察“数据库连接等待”对响应时间的影响
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 3000
+
+logging:
+  level:
+    com.leave: info
